@@ -7,7 +7,9 @@ import org.noear.solon.scheduling.annotation.EnableScheduling;
 @SolonMain
 @EnableScheduling
 public class App {
+
     public static void main(String[] args) {
         Solon.start(App.class, args);
     }
+
 }
