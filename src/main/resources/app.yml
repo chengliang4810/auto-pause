@@ -1,12 +1,29 @@
 server.port: 8080
 
 forest:
+  ## 日志总开关，打开/关闭Forest请求/响应日志（默认为 true）
+  log-enabled: true
+  ## 打开/关闭Forest请求日志（默认为 true）
+  log-request: true
+  ## 打开/关闭Forest响应状态日志（默认为 true）
+  log-response-status: true
+  ## 打开/关闭Forest响应内容日志（默认为 false）
+  log-response-content: true
   max-connections: 1000        # 连接池最大连接数
   connect-timeout: 3000        # 连接超时时间，单位为毫秒
   read-timeout: 3000           # 数据读取超时时间，单位为毫秒
   variables:
     # FSM 的 api token
     "APITOKEN": "${FSM_APITOKEN}"
+    "QBHOST": "${QB_HOST}"
+    "QBUSERNAME": "${QB_USERNAME}"
+    "QBPASSWORD": "${QB_PASSWORD}"
+
+layjava.cache:
+  driverType: "redis" #驱动类型
+  server: "127.0.0.1:6379"
+  db: 0 #默认为 0，可不配置
+  # password:
 
 solon.app:
   name: 'fsm-app'

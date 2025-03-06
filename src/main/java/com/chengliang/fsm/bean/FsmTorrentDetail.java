@@ -10,8 +10,11 @@ import java.util.List;
  * 种子详情
  */
 @Data
-public class TorrentDetail implements Serializable {
+public class FsmTorrentDetail implements Serializable {
 
+    /**
+     * 种子详情
+     */
     private Torrent torrent;
 
     // 种子信息类

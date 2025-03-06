@@ -1,9 +1,12 @@
 package com.chengliang.fsm.api;
 
 
-import com.chengliang.fsm.bean.TorrentDetail;
+import com.alibaba.fastjson2.JSONObject;
+import com.chengliang.fsm.bean.FsmTorrentDetail;
 import com.chengliang.fsm.response.FsmResponse;
 import com.dtflys.forest.annotation.*;
+
+import java.util.Map;
 
 /**
  * FSM API接口
@@ -20,6 +23,14 @@ public interface FsmApi {
      * @return 种子详情
      */
     @Get("/Torrents/details?page=1")
-    FsmResponse<TorrentDetail> getTorrentDetails(@Query("tid") String tid);
+    FsmResponse<FsmTorrentDetail> getTorrentDetails(@Query("tid") String tid);
+
+    /**
+     * 获取我的下载中的种子
+     * @param page
+     * @return
+     */
+    @Get("/Torrents/listMyDownload?page=${page}")
+    FsmResponse<JSONObject> getDownloadingTorrent(@Query("page") Integer page);
 
 }
