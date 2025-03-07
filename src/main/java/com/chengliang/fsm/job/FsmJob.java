@@ -1,22 +1,29 @@
 package com.chengliang.fsm.job;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.BetweenFormatter;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.BooleanUtil;
-import com.alibaba.fastjson2.JSONArray;
+import cn.hutool.core.util.StrUtil;
+import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.alibaba.fastjson2.JSONObject;
 import com.chengliang.fsm.api.FsmApi;
+import com.chengliang.fsm.api.QBittorrentApi;
 import com.chengliang.fsm.bean.FsmTorrentDetail;
+import com.chengliang.fsm.db.TorrentProgress;
+import com.chengliang.fsm.mapper.CommonMapper;
 import com.chengliang.fsm.response.FsmResponse;
+import com.dtflys.forest.Forest;
+import com.dtflys.forest.config.ForestConfiguration;
+import com.dtflys.forest.http.ForestResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.annotation.Component;
-import org.noear.solon.data.cache.CacheService;
 import org.noear.solon.scheduling.annotation.Scheduled;
 
 import java.util.Date;
-import java.util.ListIterator;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Fsm定时任务 获取下载中的种子的过期时间
@@ -29,80 +36,80 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class FsmJob {
 
     private final FsmApi fsmApi;
-    private final CacheService cacheService;
+    private final CommonMapper mapper;
+    private final QBittorrentApi qBittorrentApi;
 
-    /**
-     * 剩余API调用次数
-     */
-    private final static AtomicInteger count = new AtomicInteger(0);
+    @Scheduled(fixedRate = 2000, initialDelay = 2000)
+    public void getExpireTorrent() {
+        // 查询数据库中没有过期时间的种子最多15个
+        List<TorrentProgress> torrentProgressList = QueryChain.of(mapper, TorrentProgress.class)
+                // 按照时间升序排序获取15个种子
+                .orderBy(TorrentProgress::getExpireTime)
+                // 过期时间大于等于当前时间(减一分钟时间)的种子。 提前一分钟是为了防止下载时间超过了免费时间，导致考试计算下载流量问题
+                .gte(TorrentProgress::getExpireTime,  DateUtil.offsetMinute(new Date(), 1))
+                .list();
 
-    /**
-     * 每分钟重置一次API调用次数
-     */
-    @Scheduled(fixedRate = 60000)
-    public void apiCount(){
-        count.set(15);
+        if (CollUtil.isEmpty(torrentProgressList)) {
+            return;
+        }
+
+        // 获取种子的hash值
+        List<String> hashList = torrentProgressList.stream().map(TorrentProgress::getHash).filter(StrUtil::isNotBlank).collect(Collectors.toList());
+        String hashes = StrUtil.join("|", hashList);
+
+        ForestConfiguration config = Forest.config();
+        Object qbcookie = config.getVariableValue("qbcookie");
+        // 暂停种子的下载
+        ForestResponse<JSONObject> fsmResponse = qBittorrentApi.pauseTorrent(hashes, qbcookie);
+        if (!fsmResponse.statusOk()) {
+            log.error("暂停种子下载失败: {}", fsmResponse.getResult());
+        }
     }
 
     /**
-     * 获取FSM中我的下载中的列表
+     * 获取FSM种子的免费日期信息
      */
-    @Scheduled(fixedRate = 60000)
-    public void getDownloadingTorrent(){
-        if (count.get() <= 0) {
-           return;
-        }
-        FsmResponse<JSONObject> downloadingTorrentResponse = fsmApi.getDownloadingTorrent(1);
-        if (BooleanUtil.isFalse(downloadingTorrentResponse.getSuccess())){
-            log.error("获取下载中的种子列表失败: {}", downloadingTorrentResponse.getMsg());
+    @Scheduled(fixedRate = 6000, initialDelay = 5000)
+    public void getFsmTorrentInfo() {
+        // 查询数据库中没有过期时间的种子最多15个
+        List<TorrentProgress> torrentProgressList = QueryChain.of(mapper, TorrentProgress.class)
+                .limit(15)
+                .isNull(TorrentProgress::getExpireTime)
+                .list();
+
+        if (CollUtil.isEmpty(torrentProgressList)) {
             return;
         }
+        torrentProgressList.forEach(torrentProgress -> {
+            FsmResponse<FsmTorrentDetail> fsmResponse = fsmApi.getTorrentDetails(torrentProgress.getKey());
+            if (BooleanUtil.isFalse(fsmResponse.getSuccess())) {
+                log.error("获取种子详情失败: {}", fsmResponse.getMsg());
+                return;
+            }
+            FsmTorrentDetail fsmTorrentDetails = fsmResponse.getData();
+            FsmTorrentDetail.Torrent torrent = fsmTorrentDetails.getTorrent();
+            // 获取种子状态
+            String category = torrent.getStatus().getCategory();
+            // 获取种子的免费结束时间， 将毫秒值转换为日期格式
+            Long endAt = torrent.getStatus().getEndAt();
+            if (endAt == null) {
+                // 等于空值，说明种子已经过期
+                mapper.update(new TorrentProgress().setId(torrentProgress.getId()).setExpireTime(System.currentTimeMillis()));
+                log.info("种子详情: 【付费资源】 tid: {} 标题: {}, 文件大小: {}, ", torrent.getTid(), torrent.getTitle(), torrent.getFileSize());
+                return;
+            }
+            // 更新数据库中的种子信息过期时间
+            mapper.update(new TorrentProgress().setId(torrentProgress.getId()).setExpireTime(endAt * 1000));
 
-        JSONObject data = downloadingTorrentResponse.getData();
-        // 最大页数为1，无需额外处理, 每页30条
-        Integer maxPage = data.getInteger("maxPage");
-        JSONArray jsonArray = data.getJSONArray("list");
+            if ("free".equals(category)) {
+                String formatBetween = DateUtil.formatBetween(new Date(), new Date(endAt * 1000), BetweenFormatter.Level.MINUTE);
+                log.info("种子详情: 【免费资源】 tid: {} 标题: {}, 文件大小: {}, 免费时间剩余: {}", torrent.getTid(), torrent.getTitle(), torrent.getFileSize(), formatBetween);
+            } else {
+                log.info("种子详情: 【付费资源】 tid: {} 标题: {}, 文件大小: {}, ", torrent.getTid(), torrent.getTitle(), torrent.getFileSize());
+            }
+        });
 
-        for (int i = 0; i < jsonArray.size(); i++) {
-            JSONObject jsonObject = jsonArray.getJSONObject(i);
-            Integer tid = jsonObject.getInteger("tid");
-            String title = jsonObject.getString("title");
-            String hash = jsonObject.getString("fileHash");
 
-            log.info("tid: {}, 标题: {}, HASH: {}", tid, title, hash);
-        }
-
-        // 减1次
-        count.decrementAndGet();
-        if (maxPage == 1){
-            return;
-        }
-
-    }
-
-    /**
-     * 最多获取十五个种子的信息
-     */
-    // @Scheduled(fixedRate = 10000, initialDelay = 10000)
-    public void getTorrentStatus() {
-        FsmResponse<FsmTorrentDetail> fsmResponse = fsmApi.getTorrentDetails("130499");
-        if (BooleanUtil.isFalse(fsmResponse.getSuccess())){
-            log.error("获取种子详情失败: {}", fsmResponse.getMsg());
-            return;
-        }
-        FsmTorrentDetail fsmTorrentDetails = fsmResponse.getData();
-        FsmTorrentDetail.Torrent torrent = fsmTorrentDetails.getTorrent();
-        // 获取种子状态
-        String category = torrent.getStatus().getCategory();
-        // 获取种子的免费结束时间， 将毫秒值转换为日期格式
-        Long endAt = torrent.getStatus().getEndAt();
-
-        if ("free".equals(category)){
-            String formatBetween = DateUtil.formatBetween(new Date(), new Date(endAt * 1000), BetweenFormatter.Level.MINUTE);
-            log.info("种子详情: 【免费资源】 tid: {} 标题: {}, 文件大小: {}, 免费时间剩余: {}", torrent.getTid(), torrent.getTitle(), torrent.getFileSize(), formatBetween);
-        } else {
-            log.info("种子详情: 【收费资源】 tid: {} 标题: {}, 文件大小: {}, ", torrent.getTid(), torrent.getTitle(), torrent.getFileSize());
-        }
     }
 
 }

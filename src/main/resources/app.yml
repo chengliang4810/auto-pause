@@ -1,8 +1,30 @@
 server.port: 8080
 
+auto-table:
+  enable: true
+  model: update
+  recordSql:
+    enable: true
+    recordType: file
+    folderPath: ./sql
+
+# 数据库配置
+solon.dataSources:
+  master!:
+    class: "com.zaxxer.hikari.HikariDataSource"
+    jdbcUrl: jdbc:sqlite:data/data.db
+    driverClassName: org.sqlite.JDBC
+
+# xmybatis配置
+mybatis.master:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  mappers:       #支持包名 或 类名（大写开头 或 *）或 xml（.xml结尾）；支持目录 ** 或 * 占位符
+    - "com.chengliang.fsm.mapper.CommonMapper"
+
 forest:
   ## 日志总开关，打开/关闭Forest请求/响应日志（默认为 true）
-  log-enabled: true
+  log-enabled: false
   ## 打开/关闭Forest请求日志（默认为 true）
   log-request: true
   ## 打开/关闭Forest响应状态日志（默认为 true）
@@ -18,12 +40,6 @@ forest:
     "QBHOST": "${QB_HOST}"
     "QBUSERNAME": "${QB_USERNAME}"
     "QBPASSWORD": "${QB_PASSWORD}"
-
-layjava.cache:
-  driverType: "redis" #驱动类型
-  server: "127.0.0.1:6379"
-  db: 0 #默认为 0，可不配置
-  # password:
 
 solon.app:
   name: 'fsm-app'

@@ -1,24 +1,20 @@
 package com.chengliang.fsm.job;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson2.JSONObject;
 import com.chengliang.fsm.api.QBittorrentApi;
 import com.chengliang.fsm.bean.QbTorrent;
+import com.chengliang.fsm.db.TorrentProgress;
+import com.chengliang.fsm.mapper.CommonMapper;
 import com.dtflys.forest.Forest;
-import com.dtflys.forest.callback.OnLoadCookie;
 import com.dtflys.forest.config.ForestConfiguration;
-import com.dtflys.forest.http.*;
-import com.dtflys.forest.solon.SolonForestVariableValue;
+import com.dtflys.forest.http.ForestResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.noear.solon.Solon;
 import org.noear.solon.annotation.Component;
-import org.noear.solon.annotation.Init;
-import org.noear.solon.data.cache.CacheService;
 import org.noear.solon.scheduling.annotation.Scheduled;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,9 +30,10 @@ import java.util.stream.Collectors;
 public class QBittorrentJob {
 
     private final QBittorrentApi qBittorrentApi;
+    private final CommonMapper mapper;
     /**
      * 下载中的Fsm种子
-     * key为文件Hash
+     * key为文件fsm tid
      * value为种子信息
      */
     public static final Map<String, QbTorrent> fsmQbTorrentMap = new ConcurrentHashMap<>();
@@ -75,13 +72,14 @@ public class QBittorrentJob {
      * 每3秒执行一次
      * 获取下载中状态的种子
      */
-    //@Scheduled(fixedRate = 1000)
+    @Scheduled(fixedRate = 3000)
     public void getDownloadingTorrents() {
 
+        // 是否需要登录
         if (!Forest.config().isVariableDefined("qbcookie")) {
             loginQb();
-            return;
         }
+
         ForestConfiguration config = Forest.config();
         Object qbcookie = config.getVariableValue("qbcookie");
 
@@ -97,12 +95,60 @@ public class QBittorrentJob {
             return;
         }
 
-        List<QbTorrent> fsmQbList = qbTorrentList.stream().filter(qb -> qb.getTracker().contains("https://connects.icu/Announce") || qb.getTracker().contains("https://nextpt.net/Announce")).collect(Collectors.toList());
+        List<QbTorrent> fsmQbList = qbTorrentList.stream()
+                .filter(qb -> qb.getTracker().contains("https://connects.icu/Announce") || qb.getTracker().contains("https://nextpt.net/Announce"))
+                .filter(qbTorrent -> StrUtil.startWith(qbTorrent.getState(), "downloading"))
+                .collect(Collectors.toList());
+
         if (CollUtil.isEmpty(fsmQbList)){
             return;
         }
         // hash: 14fb282f456bb855de8593eac40d46ba0fb42a80
-        log.info("下载中的FSM种子： {}", fsmQbList);
+        fsmQbList.forEach(qbTorrent -> {
+            // downloading  , pausedDL
+            log.info("下载列表的下载状态的FSM种子： {} - {},", qbTorrent.getName(), qbTorrent.getState());
+        });
+
+        fsmQbList.forEach(qbTorrent -> {
+            String hash = qbTorrent.getHash();
+            ForestResponse<JSONObject> torrentPropertiesResponse = qBittorrentApi.getTorrentProperties(hash, qbcookie);
+            // 种子的注释， FSM在备注中存储了tid值
+            String comment = torrentPropertiesResponse.getResult().getString("comment");
+            String tid = parseCommentGetTid(comment);
+
+            if (StrUtil.isBlank(tid)){
+                return;
+            }
+
+            TorrentProgress progress = mapper.getById(TorrentProgress.class, "fsm" + tid);
+            if (progress != null){
+                return;
+            }
+
+            TorrentProgress torrentProgress = new TorrentProgress();
+            torrentProgress.setId("fsm" + tid);
+            torrentProgress.setHash(hash);
+            torrentProgress.setKey(tid);
+            torrentProgress.setName(qbTorrent.getName());
+            torrentProgress.setPlatform("fsm");
+            torrentProgress.setSize(qbTorrent.getTotalSize());
+            torrentProgress.setHash(hash);
+            mapper.save(torrentProgress);
+
+        });
+    }
+
+    /**
+     * 解析comment获取tid
+     * @param comment
+     * @return
+     */
+    private String parseCommentGetTid(String comment) {
+        if (StrUtil.startWith(comment, "https://fsm.name/Torrents/details?tid=")) {
+            String tid = comment.replace("https://fsm.name/Torrents/details?tid=", "");
+            return StrUtil.trim(tid);
+        }
+        return null;
     }
 
 
