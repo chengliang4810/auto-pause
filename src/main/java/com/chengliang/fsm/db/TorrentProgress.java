@@ -57,4 +57,10 @@ public class TorrentProgress implements Serializable {
     @AutoColumn(comment = "到期时间")
     private Long expireTime;
 
+    /**
+     * 是否下载中
+     */
+    @AutoColumn(comment = "是否下载中")
+    private Boolean downloading;
+
 }

@@ -54,3 +54,16 @@ hash text NULL  , -- 种子的hash
 expire_time integer(16) NULL   -- 到期时间
 );
 INSERT INTO torrent_progress (size,name,expire_time,id,key,platform,hash) SELECT size,name,expire_time,id,key,platform,hash FROM _torrent_progress_old_20250308_1_2_3;
+ALTER TABLE torrent_progress RENAME TO _torrent_progress_old_20250308_1_2_3_4;
+CREATE TABLE torrent_progress -- 种子进度 
+(
+id text NULL  , -- 唯一标识
+key text NULL  , -- 种子平台的唯一标识
+platform text NULL  , -- 平台类型
+name text NULL  , -- 种子的名称
+size integer(16) NULL  , -- 种子的大小
+hash text NULL  , -- 种子的hash
+expire_time integer(16) NULL  , -- 到期时间
+downloading integer(16) NULL   -- 是否下载中
+);
+INSERT INTO torrent_progress (size,name,expire_time,id,key,platform,hash) SELECT size,name,expire_time,id,key,platform,hash FROM _torrent_progress_old_20250308_1_2_3_4;

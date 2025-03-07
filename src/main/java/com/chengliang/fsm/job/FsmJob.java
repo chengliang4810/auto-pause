@@ -39,14 +39,21 @@ public class FsmJob {
     private final CommonMapper mapper;
     private final QBittorrentApi qBittorrentApi;
 
+    /**
+     * 获取数据库中没有过期时间的种子
+     * 并获取种子的过期时间
+     * 如果种子超过免费时间 则暂停种子的下载
+     */
     @Scheduled(fixedRate = 2000, initialDelay = 2000)
     public void getExpireTorrent() {
-        // 查询数据库中没有过期时间的种子最多15个
+        // 查询数据库下载中状态的超过免费期的种子
         List<TorrentProgress> torrentProgressList = QueryChain.of(mapper, TorrentProgress.class)
+                // 下载中
+                .eq(TorrentProgress::getDownloading, true)
                 // 按照时间升序排序获取15个种子
                 .orderBy(TorrentProgress::getExpireTime)
-                // 过期时间大于等于当前时间(减一分钟时间)的种子。 提前一分钟是为了防止下载时间超过了免费时间，导致考试计算下载流量问题
-                .gte(TorrentProgress::getExpireTime,  DateUtil.offsetMinute(new Date(), 1))
+                // 过期时间大于等于当前时间(减一分钟时间)的种子。 提前一分钟是为了防止下载时间超过了免费时间，导致计算下载流量问题
+                .lte(TorrentProgress::getExpireTime,  DateUtil.offsetMinute(new Date(), -1).getTime())
                 .list();
 
         if (CollUtil.isEmpty(torrentProgressList)) {
@@ -63,7 +70,12 @@ public class FsmJob {
         ForestResponse<JSONObject> fsmResponse = qBittorrentApi.pauseTorrent(hashes, qbcookie);
         if (!fsmResponse.statusOk()) {
             log.error("暂停种子下载失败: {}", fsmResponse.getResult());
+            return;
         }
+
+        List<TorrentProgress> collect = torrentProgressList.stream().map(torrentProgress -> new TorrentProgress().setId(torrentProgress.getId()).setDownloading(false)).collect(Collectors.toList());
+        mapper.update(collect);
+        log.info("暂停种子成功");
     }
 
     /**

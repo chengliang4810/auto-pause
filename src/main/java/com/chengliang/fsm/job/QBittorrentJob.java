@@ -97,7 +97,7 @@ public class QBittorrentJob {
 
         List<QbTorrent> fsmQbList = qbTorrentList.stream()
                 .filter(qb -> qb.getTracker().contains("https://connects.icu/Announce") || qb.getTracker().contains("https://nextpt.net/Announce"))
-                .filter(qbTorrent -> StrUtil.startWith(qbTorrent.getState(), "downloading"))
+                .filter(qb -> "downloading".equals(qb.getState()))
                 .collect(Collectors.toList());
 
         if (CollUtil.isEmpty(fsmQbList)){
@@ -120,13 +120,16 @@ public class QBittorrentJob {
                 return;
             }
 
+            TorrentProgress torrentProgress = new TorrentProgress();
+            torrentProgress.setId("fsm" + tid);
+            torrentProgress.setDownloading(true);
+
             TorrentProgress progress = mapper.getById(TorrentProgress.class, "fsm" + tid);
             if (progress != null){
+                mapper.update(torrentProgress);
                 return;
             }
 
-            TorrentProgress torrentProgress = new TorrentProgress();
-            torrentProgress.setId("fsm" + tid);
             torrentProgress.setHash(hash);
             torrentProgress.setKey(tid);
             torrentProgress.setName(qbTorrent.getName());
