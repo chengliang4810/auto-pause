@@ -1,5 +1,6 @@
 server.port: 8080
 
+# 自动建表
 auto-table:
   enable: true
   banner: false
@@ -8,6 +9,7 @@ auto-table:
     enable: true
     recordType: file
     folderPath: ./sql
+    version: 1.0.0
 
 # 数据库配置
 solon.dataSources:
@@ -43,7 +45,7 @@ forest:
     "QBPASSWORD": "${QB_PASSWORD}"
 
 solon.app:
-  name: 'fsm-app'
+  name: 'auto-pause-app'
   group: 'app'
 
 solon.logging:
