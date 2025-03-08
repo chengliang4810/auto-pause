@@ -10,7 +10,6 @@ services:
     volumes:
       - ./data:/auto-pause/data
     environment:
-      - TZ=Asia/Shanghai
       # FSM的API TOKEN
       - FSM_APITOKEN=
       # QBittorrent的地址
@@ -18,3 +17,7 @@ services:
       # 账号和密码
       - QB_USERNAME=admin
       - QB_PASSWORD=password
+      # 内存资源限制
+      - JAVA_OPTS=Xms64m -Xmx128m
+      # 中国时区
+      - TZ=Asia/Shanghai
