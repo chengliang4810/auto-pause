@@ -106,7 +106,7 @@ public class QBittorrentJob {
         // hash: 14fb282f456bb855de8593eac40d46ba0fb42a80
         fsmQbList.forEach(qbTorrent -> {
             // downloading  , pausedDL
-            log.info("下载列表的下载状态的FSM种子： {} - {},", qbTorrent.getName(), qbTorrent.getState());
+            log.info("下载状态的FSM种子： {} - {},", qbTorrent.getName(), qbTorrent.getState());
         });
 
         fsmQbList.forEach(qbTorrent -> {
