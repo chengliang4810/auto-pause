@@ -1,4 +1,4 @@
-package com.chengliang.fsm.bean;
+package com.layjava.auto.pause.bean;
 
 import lombok.Data;
 import lombok.experimental.Accessors;

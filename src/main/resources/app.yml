@@ -20,7 +20,7 @@ mybatis.master:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   mappers:       #支持包名 或 类名（大写开头 或 *）或 xml（.xml结尾）；支持目录 ** 或 * 占位符
-    - "com.chengliang.fsm.mapper.CommonMapper"
+    - "com.layjava.auto.pause.CommonMapper"
 
 forest:
   ## 日志总开关，打开/关闭Forest请求/响应日志（默认为 true）

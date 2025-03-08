@@ -1,12 +1,10 @@
-package com.chengliang.fsm.api;
+package com.layjava.auto.pause.api;
 
 
 import com.alibaba.fastjson2.JSONObject;
-import com.chengliang.fsm.bean.FsmTorrentDetail;
-import com.chengliang.fsm.response.FsmResponse;
+import com.layjava.auto.pause.bean.FsmTorrentDetail;
+import com.layjava.auto.pause.response.FsmResponse;
 import com.dtflys.forest.annotation.*;
-
-import java.util.Map;
 
 /**
  * FSM API接口

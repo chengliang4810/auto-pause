@@ -1,7 +1,7 @@
-package com.chengliang.fsm;
+package com.layjava.auto.pause;
 
 import cn.xbatis.core.XbatisConfig;
-import com.chengliang.fsm.mapper.CommonMapper;
+import com.layjava.auto.pause.mapper.CommonMapper;
 import org.dromara.autotable.solon.annotation.EnableAutoTable;
 import org.noear.solon.Solon;
 import org.noear.solon.annotation.SolonMain;

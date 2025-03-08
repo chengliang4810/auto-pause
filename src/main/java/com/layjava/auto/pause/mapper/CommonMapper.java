@@ -1,4 +1,4 @@
-package com.chengliang.fsm.mapper;
+package com.layjava.auto.pause.mapper;
 
 import cn.xbatis.core.mybatis.mapper.BasicMapper;
 

@@ -1,0 +1,20 @@
+services:
+  auto-pause:
+    image: layjava/auto-pause:latest
+    container_name: auto-pause
+    restart: always
+# 待定做不做管理界面
+#    ports:
+#      - 8080:8080
+    # 保留数据
+    volumes:
+      - ./data:/auto-pause/data
+    environment:
+      - TZ=Asia/Shanghai
+      # FSM的API TOKEN
+      - FSM_APITOKEN=
+      # QBittorrent的地址
+      - QB_HOST=http://127.0.0.1:8085
+      # 账号和密码
+      - QB_USERNAME=admin
+      - QB_PASSWORD=password

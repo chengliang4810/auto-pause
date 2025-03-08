@@ -1,4 +1,4 @@
-package com.chengliang.fsm.db;
+package com.layjava.auto.pause.db;
 
 import cn.xbatis.db.annotations.Table;
 import cn.xbatis.db.annotations.TableId;

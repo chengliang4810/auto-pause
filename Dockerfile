@@ -4,16 +4,17 @@ FROM bellsoft/liberica-openjdk-debian:17.0.11-cds
 
 LABEL maintainer="chengliang4810"
 
-RUN mkdir -p /fsm/logs \
-    /fsm/data
+RUN mkdir -p /auto-pause/logs \
+    /auto-pause/sql \
+    /auto-pause/data
 
-WORKDIR /fsm
+WORKDIR /auto-pause
 
 ENV SERVER_PORT=8080 LANG=C.UTF-8 LC_ALL=C.UTF-8 JAVA_OPTS="" APITOKEN="" QBHOST="" QBUSERNAME="" QBPASSWORD=""
 
 EXPOSE ${SERVER_PORT}
 
-ADD ./target/fsm.jar ./app.jar
+ADD ./target/auto-pause.jar ./app.jar
 
 ENTRYPOINT java -Djava.security.egd=file:/dev/./urandom -Dserver.port=${SERVER_PORT} \
            -XX:+HeapDumpOnOutOfMemoryError -XX:+UseZGC ${JAVA_OPTS} \

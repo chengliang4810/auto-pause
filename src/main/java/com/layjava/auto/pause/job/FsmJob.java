@@ -1,4 +1,4 @@
-package com.chengliang.fsm.job;
+package com.layjava.auto.pause.job;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.BetweenFormatter;
@@ -7,12 +7,12 @@ import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.alibaba.fastjson2.JSONObject;
-import com.chengliang.fsm.api.FsmApi;
-import com.chengliang.fsm.api.QBittorrentApi;
-import com.chengliang.fsm.bean.FsmTorrentDetail;
-import com.chengliang.fsm.db.TorrentProgress;
-import com.chengliang.fsm.mapper.CommonMapper;
-import com.chengliang.fsm.response.FsmResponse;
+import com.layjava.auto.pause.api.FsmApi;
+import com.layjava.auto.pause.api.QBittorrentApi;
+import com.layjava.auto.pause.bean.FsmTorrentDetail;
+import com.layjava.auto.pause.db.TorrentProgress;
+import com.layjava.auto.pause.mapper.CommonMapper;
+import com.layjava.auto.pause.response.FsmResponse;
 import com.dtflys.forest.Forest;
 import com.dtflys.forest.config.ForestConfiguration;
 import com.dtflys.forest.http.ForestResponse;

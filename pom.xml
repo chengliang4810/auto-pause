@@ -11,8 +11,8 @@
         <relativePath />
     </parent>
 
-    <groupId>com.chengliang</groupId>
-    <artifactId>fsm</artifactId>
+    <groupId>com.layjava</groupId>
+    <artifactId>auto-pause</artifactId>
     <version>1.0</version>
     
     <packaging>jar</packaging>

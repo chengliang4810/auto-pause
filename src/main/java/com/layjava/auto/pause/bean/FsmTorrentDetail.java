@@ -1,4 +1,4 @@
-package com.chengliang.fsm.bean;
+package com.layjava.auto.pause.bean;
 
 import com.alibaba.fastjson2.annotation.JSONField;
 import lombok.Data;

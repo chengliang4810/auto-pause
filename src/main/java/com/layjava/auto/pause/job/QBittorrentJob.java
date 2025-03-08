@@ -1,12 +1,12 @@
-package com.chengliang.fsm.job;
+package com.layjava.auto.pause.job;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson2.JSONObject;
-import com.chengliang.fsm.api.QBittorrentApi;
-import com.chengliang.fsm.bean.QbTorrent;
-import com.chengliang.fsm.db.TorrentProgress;
-import com.chengliang.fsm.mapper.CommonMapper;
+import com.layjava.auto.pause.api.QBittorrentApi;
+import com.layjava.auto.pause.bean.QbTorrent;
+import com.layjava.auto.pause.db.TorrentProgress;
+import com.layjava.auto.pause.mapper.CommonMapper;
 import com.dtflys.forest.Forest;
 import com.dtflys.forest.config.ForestConfiguration;
 import com.dtflys.forest.http.ForestResponse;
