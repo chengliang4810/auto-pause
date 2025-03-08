@@ -69,13 +69,13 @@ public class FsmJob {
         // 暂停种子的下载
         ForestResponse<JSONObject> fsmResponse = qBittorrentApi.pauseTorrent(hashes, qbcookie);
         if (!fsmResponse.statusOk()) {
-            log.error("暂停种子下载失败: {}", fsmResponse.getResult());
+            log.error("暂停超过免费期种子失败: {}", fsmResponse.getResult());
             return;
         }
 
         List<TorrentProgress> collect = torrentProgressList.stream().map(torrentProgress -> new TorrentProgress().setId(torrentProgress.getId()).setDownloading(false)).collect(Collectors.toList());
         mapper.update(collect);
-        log.info("暂停种子成功");
+        log.info("暂停超过免费期种子成功");
     }
 
     /**
