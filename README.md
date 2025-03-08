@@ -14,4 +14,14 @@
 
 
 #### 介绍
-layjava admin（“累”Java） 是基于solon的管理系统，
+Auto Pause 自动暂停 是基于solon的自动化管理QBittorrent的下载任务的系统。
+主要用于自动暂停PT站的非免流的下载任务，不在担心非免流的下载任务使用过多的下载流量。
+
+### PT站支持
+[x] FSM
+
+
+### 截图
+> 通过后台日志查看工作情况
+
+![img.png](docs/img.png)
