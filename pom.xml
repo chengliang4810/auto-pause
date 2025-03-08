@@ -20,7 +20,7 @@
     <description>监控fsm种子过期自动暂停qb下载项目</description>
 
     <properties>
-        <java.version>1.8</java.version>
+        <java.version>17</java.version>
     </properties>
 
     <dependencies>
@@ -28,7 +28,7 @@
         <dependency>
             <groupId>com.dtflys.forest</groupId>
             <artifactId>forest-solon-plugin</artifactId>
-            <version>1.6.3</version>
+            <version>1.6.4</version>
         </dependency>
 
         <dependency>
