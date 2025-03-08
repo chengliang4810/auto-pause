@@ -50,10 +50,10 @@ public class FsmJob {
         List<TorrentProgress> torrentProgressList = QueryChain.of(mapper, TorrentProgress.class)
                 // 下载中
                 .eq(TorrentProgress::getDownloading, true)
-                // 按照时间升序排序获取15个种子
-                .orderBy(TorrentProgress::getExpireTime)
                 // 过期时间大于等于当前时间(减一分钟时间)的种子。 提前一分钟是为了防止下载时间超过了免费时间，导致计算下载流量问题
                 .lte(TorrentProgress::getExpireTime,  DateUtil.offsetMinute(new Date(), -1).getTime())
+                // 按照时间升序排序获取15个种子
+                .orderBy(TorrentProgress::getExpireTime)
                 .list();
 
         if (CollUtil.isEmpty(torrentProgressList)) {
